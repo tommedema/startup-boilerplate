@@ -1,8 +1,9 @@
-# Build files
+# Build and cache files
 build
 dist
 *.tsbuildinfo
 .serverless
+.cache
 
 # Logs
 logs
