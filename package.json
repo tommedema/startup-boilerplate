@@ -1,0 +1,21 @@
+{
+  "name": "@org/startup-boilerplate",
+  "private": true,
+  "version": "1.0.0",
+  "author": "Tom Medema <tommedema@gmail.com>",
+  "license": "MIT",
+  "workspaces": {
+    "packages": [
+      "packages/*"
+    ]
+  },
+  "engines": {
+    "node": ">=10.17.0 <11.0.0",
+    "yarn": ">=1.19.1 < 2.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "10.17.0",
+    "lerna": "3.19.0",
+    "typescript": "3.7.2"
+  }
+}
