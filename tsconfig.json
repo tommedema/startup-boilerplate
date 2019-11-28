@@ -5,6 +5,11 @@
       "strict": true,
       "removeComments": true,
       "sourceMap": true,
-      "esModuleInterop": true
+      "esModuleInterop": true,
+      "composite": true,
+      "baseUrl": "./packages",
+      "paths": {
+        "@org/*": ["./*/src"]
+      }
   }
 }

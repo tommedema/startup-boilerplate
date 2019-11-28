@@ -1,5 +1,5 @@
 import React from 'react'
-import stringToEmoji from '../../../string-to-emoji/src'
+import stringToEmoji from '@org/string-to-emoji'
 
 const App: React.FC = () => {
   const emoji = stringToEmoji('example@domain.tld')
