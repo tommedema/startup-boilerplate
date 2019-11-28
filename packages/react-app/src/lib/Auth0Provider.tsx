@@ -1,12 +1,9 @@
-import React, { useState, useEffect, useContext, ReactChildren } from 'react'
+import React, { useState, useEffect, useContext, ReactChild } from 'react'
 import createAuth0Client from '@auth0/auth0-spa-js'
 import Auth0Client from '@auth0/auth0-spa-js/dist/typings/Auth0Client'
 
-const DEFAULT_REDIRECT_CALLBACK = () =>
-  window.history.replaceState({}, document.title, window.location.pathname)
-
 interface Auth0ProviderArguments extends Auth0ClientOptions {
-  children: ReactChildren
+  children: ReactChild
   onRedirectCallback: (appState?: any) => void 
 }
 
@@ -19,7 +16,7 @@ export const useAuth0 = () => useContext(Auth0Context)
  */
 export const Auth0Provider = <U extends {}>({
   children,
-  onRedirectCallback = DEFAULT_REDIRECT_CALLBACK,
+  onRedirectCallback,
   ...initOptions
 }: Auth0ProviderArguments) => {
   const [isAuthenticated, setIsAuthenticated] = useState(false)
@@ -82,7 +79,7 @@ export const Auth0Provider = <U extends {}>({
 
     setLoading(true)
     await auth0Client.handleRedirectCallback()
-    const userProfile = await auth0Client.getUser();
+    const userProfile = await auth0Client.getUser()
     setLoading(false)
     setIsAuthenticated(true)
     setUser(userProfile)
