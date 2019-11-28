@@ -41,6 +41,25 @@ provider:
     # see https://github.com/serverless/serverless/issues/6698
     - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
 
+  iamRoleStatements:
+    - Effect: Allow
+      Action:
+        - dynamodb:Query
+        - dynamodb:Scan
+        - dynamodb:GetItem
+        - dynamodb:PutItem
+        - dynamodb:UpdateItem
+        - dynamodb:DeleteItem
+        - dynamodb:BatchWriteItem
+        - dynamodb:BatchGetItem
+        - dynamodb:GetRecords
+        - dynamodb:GetShardIterator
+        - dynamodb:DescribeStream
+        - dynamodb:ListStreams
+      Resource:
+        - Fn::GetAtt: [DynamoDBTableEmojiHashes, Arn]
+        - Fn::Join: ['', [Fn::GetAtt: [DynamoDBTableEmojiHashes, Arn], '/*']]
+
 package:
   # all dependencies are included in the compiled Javascript using Parcel
   # therefore we can exclude everything except for the distributable folder
@@ -62,6 +81,9 @@ functions:
 
   getEmojiFromInputString:
     handler: dist/emoji.getEmojiFromStringHandler
+    environment:
+      EMOJI_HASHES_TABLE_NAME:
+        Ref: DynamoDBTableEmojiHashes
     events:
       - http:
           path: '{version}/emoji/{inputString}'
@@ -72,3 +94,44 @@ functions:
               paths:
                 version: true
                 inputString: true
+
+resources:
+  Resources:
+    DynamoDBTableEmojiHashes:
+      Type: AWS::DynamoDB::Table
+      DeletionPolicy: Retain
+      Properties:
+        AttributeDefinitions:
+          -
+            AttributeName: id
+            AttributeType: S
+          -
+            AttributeName: input
+            AttributeType: S
+        
+        KeySchema:
+          # select by id sorted by input string
+          -
+            AttributeName: id
+            KeyType: HASH
+          -
+            AttributeName: input
+            KeyType: RANGE
+
+        GlobalSecondaryIndexes:
+          -
+            IndexName: input-id-gsi1
+            
+            # select by input string sorted by id
+            KeySchema:
+              -
+                AttributeName: input
+                KeyType: HASH
+              -
+                AttributeName: id
+                KeyType: RANGE
+
+            Projection:
+              ProjectionType: ALL
+        
+        BillingMode: PAY_PER_REQUEST
