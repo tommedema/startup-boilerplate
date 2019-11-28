@@ -10,6 +10,7 @@
     ]
   },
   "scripts": {
+    "deploy": "lerna run deploy",
     "build": "lerna run build"
   },
   "devDependencies": {
