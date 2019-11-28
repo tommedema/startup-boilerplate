@@ -7,7 +7,27 @@ interface Auth0ProviderArguments extends Auth0ClientOptions {
   onRedirectCallback: (appState?: any) => void 
 }
 
-export const Auth0Context = React.createContext({})
+interface Auth0ContextProps<U = {}> {
+  user?: U
+  isAuthenticated: boolean
+  isInitializing: boolean
+  isPopupOpen: boolean
+  loginWithPopup: (options?: PopupLoginOptions) => Promise<void>,
+  loginWithRedirect: (options?: RedirectLoginOptions) => Promise<void>,
+  logout: (options?: LogoutOptions) => void
+}
+
+const initialContext = {
+  user: {},
+  isAuthenticated: false,
+  isInitializing: true,
+  isPopupOpen: false,
+  loginWithPopup: async () => {},
+  loginWithRedirect: async () => {},
+  logout: () => {}
+}
+
+export const Auth0Context = React.createContext<Auth0ContextProps>(initialContext)
 export const useAuth0 = () => useContext(Auth0Context)
 
 /**
@@ -19,11 +39,11 @@ export const Auth0Provider = <U extends {}>({
   onRedirectCallback,
   ...initOptions
 }: Auth0ProviderArguments) => {
-  const [isAuthenticated, setIsAuthenticated] = useState(false)
+  const [isAuthenticated, setIsAuthenticated] = useState(initialContext.isAuthenticated)
+  const [isInitializing, setIsInitializing] = useState(initialContext.isInitializing)
+  const [isPopupOpen, setIsPopupOpen] = useState(initialContext.isPopupOpen)
   const [user, setUser] = useState<U>()
   const [auth0Client, setAuth0] = useState<Auth0Client>()
-  const [loading, setLoading] = useState(true)
-  const [popupOpen, setPopupOpen] = useState(false)
 
   useEffect(() => {
     const initAuth0 = async () => {
@@ -37,33 +57,34 @@ export const Auth0Provider = <U extends {}>({
 
       const authed = await auth0FromHook.isAuthenticated()
 
-      setIsAuthenticated(authed)
-
       if (authed) {
         const userProfile = await auth0FromHook.getUser()
 
+        setIsAuthenticated(true)
         setUser(userProfile)
       }
 
-      setLoading(false)
+      setIsInitializing(false)
     }
     
     initAuth0()
   }, [])
 
-  const loginWithPopup = async (params = {}) => {
+  const loginWithPopup = async (options?: PopupLoginOptions) => {
     if (auth0Client === undefined) {
       throw new Error('Auth0 has not been initialized')
     }
 
-    setPopupOpen(true)
+    console.log('popup is open')
+    setIsPopupOpen(true)
 
     try {
-      await auth0Client.loginWithPopup(params)
+      await auth0Client.loginWithPopup(options)
     } catch (error) {
       console.error(error)
     } finally {
-      setPopupOpen(false)
+      console.log('popup closed')
+      setIsPopupOpen(false)
     }
 
     const userProfile = await auth0Client.getUser()
@@ -77,10 +98,10 @@ export const Auth0Provider = <U extends {}>({
       throw new Error('Auth0 has not been initialized')
     }
 
-    setLoading(true)
+    setIsInitializing(true)
     await auth0Client.handleRedirectCallback()
     const userProfile = await auth0Client.getUser()
-    setLoading(false)
+    setIsInitializing(false)
     setIsAuthenticated(true)
     setUser(userProfile)
   }
@@ -90,7 +111,7 @@ export const Auth0Provider = <U extends {}>({
       throw new Error('Auth0 has not been initialized')
     }
 
-    auth0Client.getIdTokenClaims(options)
+    return auth0Client.getIdTokenClaims(options)
   }
 
   const loginWithRedirect = (options?: RedirectLoginOptions) => {
@@ -98,7 +119,7 @@ export const Auth0Provider = <U extends {}>({
       throw new Error('Auth0 has not been initialized')
     }
 
-    auth0Client.loginWithRedirect(options)
+    return auth0Client.loginWithRedirect(options)
   }
 
   const getTokenSilently = (options?: GetTokenSilentlyOptions) => {
@@ -106,7 +127,7 @@ export const Auth0Provider = <U extends {}>({
       throw new Error('Auth0 has not been initialized')
     }
 
-    auth0Client.getTokenSilently(options)
+    return auth0Client.getTokenSilently(options)
   }
 
   const getTokenWithPopup = (options?: GetTokenWithPopupOptions) => {
@@ -114,7 +135,7 @@ export const Auth0Provider = <U extends {}>({
       throw new Error('Auth0 has not been initialized')
     }
 
-    auth0Client.getTokenWithPopup(options)
+    return auth0Client.getTokenWithPopup(options)
   }
 
   const logout = (options?: LogoutOptions) => {
@@ -122,23 +143,23 @@ export const Auth0Provider = <U extends {}>({
       throw new Error('Auth0 has not been initialized')
     }
 
-    auth0Client.logout(options)
+    return auth0Client.logout(options)
   }
 
   return (
     <Auth0Context.Provider
       value={{
-        isAuthenticated,
         user,
-        loading,
-        popupOpen,
+        isAuthenticated,
+        isInitializing,
+        isPopupOpen,
         loginWithPopup,
-        handleRedirectCallback,
-        getIdTokenClaims,
         loginWithRedirect,
-        getTokenSilently,
-        getTokenWithPopup,
         logout
+        // handleRedirectCallback,
+        // getIdTokenClaims,
+        // getTokenSilently,
+        // getTokenWithPopup
       }}
     >
       {children}
