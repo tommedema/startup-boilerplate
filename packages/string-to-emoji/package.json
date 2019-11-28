@@ -1,0 +1,14 @@
+{
+  "name": "@org/string-to-emoji",
+  "main": "dist/index.ts",
+  "source": "src/index.ts",
+  "license": "MIT",
+  "version": "1.0.0",
+  "dependencies": {},
+  "devDependencies": {
+    "babel-core": "^6.26.3"
+  },
+  "scripts": {
+    "build": "parcel build src/index.ts"
+  }
+}
