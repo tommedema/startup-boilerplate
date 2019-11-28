@@ -3,8 +3,12 @@
   "editor.rulers": [80],
   "editor.renderControlCharacters": false,
   "editor.renderWhitespace": "none",
+  "javascript.preferences.quoteStyle": "single",
   "javascript.updateImportsOnFileMove.enabled": "always",
+  "javascript.format.semicolons": "remove",
+  "typescript.preferences.quoteStyle": "single",
   "typescript.updateImportsOnFileMove.enabled": "always",
+  "typescript.format.semicolons": "remove",
   "files.associations": {
     "*.js": "javascript",
     "*.ts": "typescript",

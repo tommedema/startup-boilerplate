@@ -1,0 +1,74 @@
+service: org-serverless-api
+
+frameworkVersion: ">=1.1.0 <2.0.0"
+
+plugins:
+  - serverless-dotenv-plugin
+  - serverless-plugin-scripts
+  
+provider:
+  name: aws
+  stage: ${{opt:stage, 'local'}}
+  region: ${{opt:region, 'us-west-2'}}
+  
+  # use ${{}} to access serverless variables
+  # this is necessary because cloudformation uses ${} syntax
+  variableSyntax: "\\${{([ ~:a-zA-Z0-9._\\'\",\\-\\/\\(\\)]+?)}}"
+      
+  stackTags:
+    SERVICE: ${{self:service}}
+    STAGE: ${{self:provider.stage}}
+    REGION: ${{self:provider.region}}
+    VERSION: ${{file(./package.json):version}}
+
+  runtime: nodejs12.x
+  memorySize: 256
+  timeout: 30
+
+  environment:
+    AWS_NODEJS_CONNECTION_REUSE_ENABLED: 1
+
+  usagePlan:
+    quota:
+      limit: 1000
+      offset: 0
+      period: DAY
+    throttle:
+      burstLimit: 10
+      rateLimit: 5
+
+  iamManagedPolicies:
+    # see https://github.com/serverless/serverless/issues/6698
+    - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+
+package:
+  # all dependencies are included in the compiled Javascript using Parcel
+  # therefore we can exclude everything except for the distributable folder
+  exclude:
+    - '**'
+    - '!dist/**'
+    
+custom:
+
+  scripts:
+    hooks:
+      # Build prior to packaging
+      'before:package:createDeploymentArtifacts': yarn build
+
+  dotenv:
+    include: []
+
+functions:
+
+  getEmojiFromInputString:
+    handler: dist/emoji.getEmojiFromStringHandler
+    events:
+      - http:
+          path: '{version}/emoji/{inputString}'
+          method: get
+          cors: true
+          request:
+            parameters:
+              paths:
+                version: true
+                inputString: true

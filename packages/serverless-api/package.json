@@ -1,0 +1,25 @@
+{
+  "name": "@org/serverless-api",
+  "version": "1.0.0",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "deploy": "serverless deploy --verbose",
+    "package": "serverless package --verbose",
+    "remove": "serverless remove --verbose",
+    "build": "parcel build src/*.ts --target node --bundle-node-modules"
+  },
+  "license": "MIT",
+  "devDependencies": {
+    "@types/aws-lambda": "^8.10.36",
+    "babel-core": "^6.26.3",
+    "serverless": "^1.58.0",
+    "serverless-dotenv-plugin": "^2.1.1",
+    "serverless-plugin-scripts": "^1.0.2",
+    "source-map-support": "^0.5.16"
+  },
+  "dependencies": {
+    "@org/string-to-emoji": "^1.0.0"
+  }
+}

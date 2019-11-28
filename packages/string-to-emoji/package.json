@@ -9,6 +9,6 @@
     "babel-core": "^6.26.3"
   },
   "scripts": {
-    "build": "parcel build src/index.ts"
+    "build": "parcel build src/index.ts --target node"
   }
 }
