@@ -1,19 +1,27 @@
 import React from 'react'
 import ReactDOM from 'react-dom'
-import App from './containers/App'
-import { Auth0Provider } from './lib/Auth0Provider'
+import App from './components/App'
+import { Auth0Provider, Auth0RedirectState } from './lib/auth0'
 import history from './lib/history'
 
-// FIXME: move this to .env or netlify env
-const config = {
-  domain: 'dev-startup-boilerplate.auth0.com',
-  clientId: 'YZQ2d98L8Un34aBxEANq2wzynERPgm6V'
+const auth0Domain = process.env.AUTH0_DOMAIN
+const auth0ClientId = process.env.AUTH0_CLIENT_ID
+const auth0RedirectUri = window.location.origin
+
+if (auth0Domain === undefined || auth0ClientId === undefined) {
+  throw new Error('missing env vars')
 }
 
-const onRedirectCallback = (appState: any) => {
+const onAuthRedirectCallback = (redirectState?: Auth0RedirectState) => {
+  console.log(
+    'auth0 onRedirectCallback called with redirectState %o',
+    redirectState
+  )
+
+  // Clears auth0 query string parameters from url
   history.push(
-    appState && appState.targetUrl
-      ? appState.targetUrl
+    redirectState && redirectState.targetUrl
+      ? redirectState.targetUrl
       : window.location.pathname
   )
 }
@@ -21,10 +29,10 @@ const onRedirectCallback = (appState: any) => {
 ReactDOM.render(
   (
     <Auth0Provider
-      domain={config.domain}
-      client_id={config.clientId}
-      redirect_uri={window.location.origin}
-      onRedirectCallback={onRedirectCallback}
+      domain={auth0Domain}
+      client_id={auth0ClientId}
+      redirect_uri={auth0RedirectUri}
+      onRedirectCallback={onAuthRedirectCallback}
     >
       <App />
     </Auth0Provider>

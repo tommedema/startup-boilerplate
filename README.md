@@ -25,7 +25,9 @@ To save headspace and manpower on sysops, allow for horizontal scaling, and to e
 ## 4. Adopt community favorites
 To improve the developer experience and go with smart but proven technologies.
 
-- React: view layer
+- React: view
+- React Router: simple routing
+- Styled Components: modular, extendible, readable styling
 - Redux: application state management
 - Parcel: low-config package bundler
 
