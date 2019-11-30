@@ -1,6 +1,10 @@
 import { APIGatewayProxyResult, APIGatewayProxyEvent, Context } from 'aws-lambda'
 import { isNull } from 'util'
 
+export interface GenericAPIGatewayEvent {
+  pathParameters?: { [name: string]: string } | null 
+}
+
 export const getLambdaProxyResponse = <T>(
   statusCode: number,
   body?: T
@@ -28,7 +32,7 @@ export const logInvocation = <E = APIGatewayProxyEvent>(
   `)
 
 export const getPathParameter = (
-  event: APIGatewayProxyEvent,
+  event: GenericAPIGatewayEvent,
   key: string
 ): string => {
   const params = event.pathParameters
@@ -47,7 +51,7 @@ export const getPathParameter = (
 }
 
 export const assertAPIVersion = (
-  event: APIGatewayProxyEvent,
+  event: GenericAPIGatewayEvent,
   version: string
 ): void => {
   const val = getPathParameter(event, 'version')

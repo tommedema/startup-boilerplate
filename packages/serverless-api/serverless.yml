@@ -28,6 +28,10 @@ provider:
   environment:
     AWS_NODEJS_CONNECTION_REUSE_ENABLED: 1
 
+    # List environment vars to be passed down to functions here
+    # This includes env vars from .env files too
+    AUTH0_DOMAIN: ${{env:AUTH0_DOMAIN}}
+
   usagePlan:
     quota:
       limit: 1000
@@ -79,6 +83,14 @@ custom:
 
 functions:
 
+  # Custom Authorizer function
+  # See https://github.com/serverless/examples/blob/master/aws-node-auth0-custom-authorizers-api/serverless.yml
+  # See https://github.com/serverless/forms-service/blob/master/backend/serverless.yml
+  # See https://www.alexdebrie.com/posts/lambda-custom-authorizers/
+  auth:
+    handler: dist/auth.handleAuthVerification
+    cors: true
+
   getEmojiFromInputString:
     handler: dist/emoji.getEmojiFromStringHandler
     environment:
@@ -86,6 +98,7 @@ functions:
         Ref: DynamoDBTableEmojiHashes
     events:
       - http:
+          authorizer: auth
           path: '{version}/emoji/{inputString}'
           method: get
           cors: true
@@ -135,3 +148,25 @@ resources:
               ProjectionType: ALL
         
         BillingMode: PAY_PER_REQUEST
+
+    # This response is needed for custom authorizer failures cors support
+    GatewayResponse:
+      Type: 'AWS::ApiGateway::GatewayResponse'
+      Properties:
+        ResponseParameters:
+          gatewayresponse.header.Access-Control-Allow-Origin: "'*'"
+          gatewayresponse.header.Access-Control-Allow-Headers: "'*'"
+        ResponseType: EXPIRED_TOKEN
+        RestApiId:
+          Ref: 'ApiGatewayRestApi'
+        StatusCode: '401'
+    AuthFailureGatewayResponse:
+      Type: 'AWS::ApiGateway::GatewayResponse'
+      Properties:
+        ResponseParameters:
+          gatewayresponse.header.Access-Control-Allow-Origin: "'*'"
+          gatewayresponse.header.Access-Control-Allow-Headers: "'*'"
+        ResponseType: UNAUTHORIZED
+        RestApiId:
+          Ref: 'ApiGatewayRestApi'
+        StatusCode: '401'

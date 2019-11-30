@@ -43,7 +43,7 @@ export async function getEmojiFromStringHandler (
     }
 
     // Store each string to emoji hash lookup in dynamodb
-    const putResult = db.putItem<StringToEmojiHash>(
+    const putResult = await db.putItem<StringToEmojiHash>(
       emojisHashesTableName,
       result
     )
