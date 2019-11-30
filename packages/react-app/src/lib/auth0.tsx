@@ -6,12 +6,14 @@ export interface Auth0RedirectState {
   targetUrl?: string
 }
 
+export interface Auth0User extends Omit<IdToken, '__raw'> {}
+
 interface Auth0ProviderArguments extends Auth0ClientOptions {
   children: ReactChild
   onRedirectCallback: (appState?: Auth0RedirectState) => void 
 }
 
-interface Auth0ContextProviderProps<U = {}> {
+interface Auth0ContextProviderProps<U extends Auth0User> {
   user?: U
   isAuthenticated: boolean
   isInitializing: boolean
@@ -33,15 +35,15 @@ const initialContext = {
   logout: () => {}
 }
 
-const Auth0Context = React.createContext<Auth0ContextProviderProps>(initialContext)
+const Auth0Context = React.createContext<Auth0ContextProviderProps<Auth0User>>(initialContext)
 
-export const useAuth0 = () => useContext(Auth0Context)
+export const useAuth0 = () => useContext<Auth0ContextProviderProps<Auth0User>>(Auth0Context)
 
 /**
  * @see https://github.com/auth0/auth0-spa-js
  * @see https://auth0.com/docs/quickstart/spa/react
  */
-export const Auth0Provider = <U extends {} = {}>({
+export const Auth0Provider = <U extends Auth0User>({
   children,
   onRedirectCallback,
   ...initOptions
