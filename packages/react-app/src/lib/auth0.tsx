@@ -14,10 +14,10 @@ interface Auth0ProviderArguments extends Auth0ClientOptions {
 }
 
 interface Auth0ContextProviderProps<U extends Auth0User> {
-  user?: U
-  isAuthenticated: boolean
-  isInitializing: boolean
-  isPopupOpen: boolean
+  user?: U,
+  isAuthenticated: boolean,
+  isInitializing: boolean,
+  isPopupOpen: boolean,
   loginWithPopup: (options?: PopupLoginOptions) => Promise<void>,
   loginWithRedirect: (options?: RedirectLoginOptions) => Promise<void>,
   getTokenSilently: (options?: GetTokenSilentlyOptions) => Promise<void>,
