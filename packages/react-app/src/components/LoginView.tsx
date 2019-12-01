@@ -7,7 +7,7 @@ const LoginView: React.FC = () => {
   return (
     <Fragment>
       <p>What's your inner animal?</p>
-      <a href="" onClick={loginWithRedirect}>
+      <a href="" onClick={async () => await loginWithRedirect({ redirect_uri: window.location.origin })}>
         Login to view Emoji
       </a>
     </Fragment>

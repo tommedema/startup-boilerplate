@@ -1,7 +1,7 @@
 import React from 'react'
 import ReactDOM from 'react-dom'
 import App from './components/App'
-import { Auth0Provider, Auth0RedirectState } from './lib/auth0'
+import { Auth0Provider } from './lib/auth0'
 import history from './lib/history'
 
 const auth0Domain = process.env.AUTH0_DOMAIN
@@ -12,7 +12,7 @@ if (auth0Domain === undefined || auth0ClientId === undefined) {
   throw new Error('missing env vars')
 }
 
-const onAuthRedirectCallback = (redirectState?: Auth0RedirectState) => {
+const onAuthRedirectCallback = (redirectState?: RedirectLoginResult) => {
   console.log(
     'auth0 onRedirectCallback called with redirectState %o',
     redirectState
@@ -20,8 +20,8 @@ const onAuthRedirectCallback = (redirectState?: Auth0RedirectState) => {
 
   // Clears auth0 query string parameters from url
   history.push(
-    redirectState && redirectState.targetUrl
-      ? redirectState.targetUrl
+    redirectState && redirectState.appState && redirectState.appState.targetUrl
+      ? redirectState.appState.targetUrl
       : window.location.pathname
   )
 }

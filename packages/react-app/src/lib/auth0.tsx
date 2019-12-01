@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useContext, ReactChild } from 'react'
+import React, { useState, useEffect, useContext } from 'react'
 import createAuth0Client from '@auth0/auth0-spa-js'
 import Auth0Client from '@auth0/auth0-spa-js/dist/typings/Auth0Client'
 
@@ -8,50 +8,35 @@ export interface Auth0RedirectState {
 
 export interface Auth0User extends Omit<IdToken, '__raw'> {}
 
-interface Auth0ProviderArguments extends Auth0ClientOptions {
-  children: ReactChild
-  onRedirectCallback: (appState?: Auth0RedirectState) => void 
+interface Auth0Context {
+  user?: Auth0User
+  isAuthenticated: boolean
+  isInitializing: boolean
+  isPopupOpen: boolean
+  loginWithPopup(o?: PopupLoginOptions): Promise<void>
+  handleRedirectCallback(): Promise<RedirectLoginResult>
+  getIdTokenClaims(o?: getIdTokenClaimsOptions): Promise<IdToken>
+  loginWithRedirect(o: RedirectLoginOptions): Promise<void>
+  getTokenSilently(o?: GetTokenSilentlyOptions): Promise<string | undefined>
+  getTokenWithPopup(o?: GetTokenWithPopupOptions): Promise<string | undefined>
+  logout(o?: LogoutOptions): void
+}
+interface Auth0ProviderOptions {
+  children: React.ReactElement
+  onRedirectCallback(result: RedirectLoginResult): void
 }
 
-interface Auth0ContextProviderProps<U extends Auth0User> {
-  user?: U,
-  isAuthenticated: boolean,
-  isInitializing: boolean,
-  isPopupOpen: boolean,
-  loginWithPopup: (options?: PopupLoginOptions) => Promise<void>,
-  loginWithRedirect: (options?: RedirectLoginOptions) => Promise<void>,
-  getTokenSilently: (options?: GetTokenSilentlyOptions) => Promise<void>,
-  logout: (options?: LogoutOptions) => void
-}
-
-const initialContext = {
-  user: {},
-  isAuthenticated: false,
-  isInitializing: true,
-  isPopupOpen: false,
-  loginWithPopup: async () => {},
-  loginWithRedirect: async () => {},
-  getTokenSilently: async () => {},
-  logout: () => {}
-}
-
-const Auth0Context = React.createContext<Auth0ContextProviderProps<Auth0User>>(initialContext)
-
-export const useAuth0 = () => useContext<Auth0ContextProviderProps<Auth0User>>(Auth0Context)
-
-/**
- * @see https://github.com/auth0/auth0-spa-js
- * @see https://auth0.com/docs/quickstart/spa/react
- */
-export const Auth0Provider = <U extends Auth0User>({
+export const Auth0Context = React.createContext<Auth0Context | null>(null)
+export const useAuth0 = () => useContext(Auth0Context)!
+export const Auth0Provider = ({
   children,
   onRedirectCallback,
   ...initOptions
-}: Auth0ProviderArguments) => {
-  const [isAuthenticated, setIsAuthenticated] = useState(initialContext.isAuthenticated)
-  const [isInitializing, setIsInitializing] = useState(initialContext.isInitializing)
-  const [isPopupOpen, setIsPopupOpen] = useState(initialContext.isPopupOpen)
-  const [user, setUser] = useState<U>()
+}: Auth0ProviderOptions & Auth0ClientOptions) => {
+  const [isAuthenticated, setIsAuthenticated] = useState(false)
+  const [isInitializing, setIsInitializing] = useState(true)
+  const [isPopupOpen, setIsPopupOpen] = useState(false)
+  const [user, setUser] = useState<Auth0User>()
   const [auth0Client, setAuth0Client] = useState<Auth0Client>()
 
   useEffect(() => {
@@ -60,8 +45,13 @@ export const Auth0Provider = <U extends Auth0User>({
       setAuth0Client(auth0FromHook)
 
       if (window.location.search.includes('code=')) {
-        const { appState } = await auth0FromHook.handleRedirectCallback()
-        onRedirectCallback(appState)
+        let appState: RedirectLoginResult = {}
+        try {
+          ({ appState } = await auth0FromHook.handleRedirectCallback())
+        }
+        finally {
+          onRedirectCallback(appState)
+        }
       }
 
       const authed = await auth0FromHook.isAuthenticated()
@@ -80,40 +70,48 @@ export const Auth0Provider = <U extends Auth0User>({
   }, [])
 
   const loginWithPopup = async (options?: PopupLoginOptions) => {
-    const auth0Client = assertAuth0Client()
-
     setIsPopupOpen(true)
 
     try {
-      await auth0Client.loginWithPopup(options)
+      await auth0Client!.loginWithPopup(options)
     } catch (error) {
       console.error(error)
     } finally {
       setIsPopupOpen(false)
     }
 
-    const userProfile = await auth0Client.getUser()
+    const userProfile = await auth0Client!.getUser()
     setUser(userProfile)
-
     setIsAuthenticated(true)
   }
 
+  const handleRedirectCallback = async () => {
+    setIsInitializing(true)
+
+    const result = await auth0Client!.handleRedirectCallback()
+    const userProfile = await auth0Client!.getUser()
+
+    setIsInitializing(false)
+    setIsAuthenticated(true)
+    setUser(userProfile)
+    
+    return result
+  }
+
   const loginWithRedirect = (options?: RedirectLoginOptions) =>
-    assertAuth0Client().loginWithRedirect(options)
+    auth0Client!.loginWithRedirect(options)
 
   const getTokenSilently = (options?: GetTokenSilentlyOptions) =>
-    assertAuth0Client().getTokenSilently(options)
+    auth0Client!.getTokenSilently(options)
 
   const logout = (options?: LogoutOptions) =>
-    assertAuth0Client().logout(options)
+    auth0Client!.logout(options)
 
-  const assertAuth0Client = (): Auth0Client => {
-    if (auth0Client === undefined) {
-      throw new Error('Auth0 has not been initialized')
-    }
+  const getIdTokenClaims = (options?: getIdTokenClaimsOptions) =>
+    auth0Client!.getIdTokenClaims(options)
 
-    return auth0Client
-  }
+  const getTokenWithPopup = (options?: GetTokenWithPopupOptions) =>
+    auth0Client!.getTokenWithPopup(options)
 
   return (
     <Auth0Context.Provider
@@ -125,10 +123,10 @@ export const Auth0Provider = <U extends Auth0User>({
         loginWithPopup,
         loginWithRedirect,
         logout,
-        getTokenSilently
-        // handleRedirectCallback
-        // getIdTokenClaims
-        // getTokenWithPopup
+        getTokenSilently,
+        handleRedirectCallback,
+        getIdTokenClaims,
+        getTokenWithPopup
       }}
     >
       {children}
