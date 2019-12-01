@@ -35,61 +35,61 @@ interface DecodedJWT {
 
 const getSigningKey = promisify(authClient.getSigningKey.bind(authClient))
 
+/**
+ * Handle an authorization request for invoking a lambda function.
+ * 
+ * Note that throwing from the lambda handler results in authorization being denied.
+ */
 export const handleAuthVerification: CustomAuthorizerHandler = async (
   event: CustomAuthorizerEvent,
   context: Context
 ) => {
   logInvocation('auth.handleAuthVerification', event, context)
   
-  try {
-    if (event.type !== 'TOKEN') {
-      throw new Error('Invalid event type from custom authorizer')
-    }
-
-    if (!event.authorizationToken) {
-      throw new Error('No JWT Token')
-    }
-
-    // Remove "Bearer " from token
-    const authToken = event.authorizationToken.substring(7)
-    if (!authToken) {
-      throw new Error('No JWT Token post-bearer')
-    }
-
-    const decodedToken = jwt.decode(authToken, { complete: true }) as DecodedToken
-    if (!decodedToken) {
-      throw new Error('Empty decoded JWT token')
-    }
-
-    // Parse Signing key from auth0
-    const kid = decodedToken.header.kid
-    if (!kid) {
-      throw new Error('No KID')
-    }
-
-    const signingKey = await getSigningKey(kid)
-    const publicKey = keyIsCert(signingKey)
-      ? signingKey.publicKey
-      : signingKey.rsaPublicKey
-    
-    const decoded = jwt.verify(authToken, publicKey, { algorithms: ['RS256'] })
-
-    console.log('decoded jwt token: %O', decoded)
-
-    if (isDecodedJWT(decoded)) {
-      const IAMPolicy = generatePolicy(decoded.sub, 'Allow', event.methodArn)
-
-      // ToDo: check user roles here
-      // I.e. does this user have permission to access this route
-
-      return IAMPolicy
-    }
-    else {
-      throw new Error('decoded jwt does not have required keys')
-    }
+  if (event.type !== 'TOKEN') {
+    throw new Error('Invalid event type from custom authorizer')
   }
-  catch (e) {
-    throw e
+
+  if (!event.authorizationToken) {
+    throw new Error('No JWT Token')
+  }
+
+  // Remove "Bearer " from token
+  const authToken = event.authorizationToken.substring(7)
+  if (!authToken) {
+    throw new Error('No JWT Token post-bearer')
+  }
+
+  const decodedToken = jwt.decode(authToken, { complete: true }) as DecodedToken
+  if (!decodedToken) {
+    throw new Error('Empty decoded JWT token')
+  }
+
+  // Parse Signing key from auth0
+  const kid = decodedToken.header.kid
+  if (!kid) {
+    throw new Error('No KID')
+  }
+
+  const signingKey = await getSigningKey(kid)
+  const publicKey = keyIsCert(signingKey)
+    ? signingKey.publicKey
+    : signingKey.rsaPublicKey
+  
+  const decoded = jwt.verify(authToken, publicKey, { algorithms: ['RS256'] })
+
+  console.log('decoded jwt token: %O', decoded)
+
+  if (isDecodedJWT(decoded)) {
+    const IAMPolicy = generatePolicy(decoded.sub, 'Allow', event.methodArn)
+
+    // ToDo: check user roles here
+    // I.e. does this user have permission to access this route
+
+    return IAMPolicy
+  }
+  else {
+    throw new Error('decoded jwt does not have required keys')
   }
 }
 
