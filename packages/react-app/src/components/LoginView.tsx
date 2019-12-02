@@ -1,13 +1,19 @@
-import React, { Fragment } from 'react'
+import React, { Fragment, EventHandler, SyntheticEvent } from 'react'
 import { useAuth0 } from '../lib/auth0'
 
 const LoginView: React.FC = () => {
-  const { loginWithRedirect } = useAuth0()
+  const { loginWithRedirect, loginWithPopup } = useAuth0()
+
+  const onLoginClick: EventHandler<SyntheticEvent<HTMLAnchorElement>> = async (e) => {
+    e.preventDefault()
+    // await loginWithRedirect()
+    await loginWithPopup()
+  }
 
   return (
     <Fragment>
       <p>What's your inner animal?</p>
-      <a href="" onClick={async () => await loginWithRedirect({ redirect_uri: window.location.origin })}>
+      <a href="" onClick={onLoginClick}>
         Login to view Emoji
       </a>
     </Fragment>

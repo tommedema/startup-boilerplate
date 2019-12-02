@@ -1,4 +1,4 @@
-import React, { Fragment } from 'react'
+import React, { Fragment, EventHandler, SyntheticEvent } from 'react'
 import { useAuth0 } from '../lib/auth0'
 import useAPIResult from '../lib/useAPIResult'
 
@@ -23,13 +23,18 @@ const EmojiView: React.FC = () => {
     `emoji/${encodeURIComponent(email)}`,
     body => body.emoji
   )
+
+  const onLogoutClick: EventHandler<SyntheticEvent<HTMLAnchorElement>> = (e) => {
+    e.preventDefault()
+    logout()
+  }
   
   return (
     <Fragment>
       <p>Your inner animal is:</p>
       <h2>{ emoji }</h2>
       <p>This is based on a hash of your email {user && user.email}</p>
-      <a href="" onClick={() => logout()}>Logout</a>
+      <a href="" onClick={onLogoutClick}>Logout</a>
     </Fragment>
   )
 }
