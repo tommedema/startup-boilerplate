@@ -7,10 +7,16 @@ import {
 import { promisify } from 'util'
 
 const auth0Domain = process.env.AUTH0_DOMAIN
+const auth0APIAudience = process.env.AUTH0_API_AUDIENCE
 
-if (auth0Domain === undefined) {
-  throw new Error('auth0 domain env var not set')
+if (
+  auth0Domain === undefined
+  || auth0APIAudience === undefined
+) {
+  throw new Error('env vars not set')
 }
+
+const auth0Issuer = `https://${auth0Domain}/`
 
 const authClient = jwksClient({
   cache: true,
@@ -76,7 +82,13 @@ export const handleAuthVerification: CustomAuthorizerHandler = async (
     ? signingKey.publicKey
     : signingKey.rsaPublicKey
   
-  const decoded = jwt.verify(authToken, publicKey, { algorithms: ['RS256'] })
+  // Throws if the token is invalid e.g. due to user not being authenticated
+  // For given audience and issuer
+  const decoded = jwt.verify(authToken, publicKey, {
+    algorithms: ['RS256'],
+    audience: auth0APIAudience,
+    issuer: auth0Issuer
+  })
 
   console.log('decoded jwt token: %O', decoded)
 

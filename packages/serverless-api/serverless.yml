@@ -31,6 +31,7 @@ provider:
     # List environment vars to be passed down to functions here
     # This includes env vars from .env files too
     AUTH0_DOMAIN: ${{env:AUTH0_DOMAIN}}
+    AUTH0_API_AUDIENCE: ${{env:AUTH0_API_AUDIENCE}}
 
   usagePlan:
     quota:

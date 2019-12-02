@@ -1,6 +1,6 @@
 import React, { Fragment } from 'react'
-import stringToEmoji from '@org/string-to-emoji'
-import { useAuth0, Auth0User } from '../lib/auth0'
+import { useAuth0 } from '../lib/auth0'
+import useAPIResult from '../lib/useAPIResult'
 
 const EmojiView: React.FC = () => {
   const {
@@ -14,7 +14,15 @@ const EmojiView: React.FC = () => {
   }
 
   const email = user && user.email
-  const emoji = stringToEmoji(email || 'default')
+
+  if (!email) {
+    return <div>Failed to fetch user email from identity service</div>
+  }
+
+  const emoji = useAPIResult<{ emoji: string }, string>(
+    `emoji/${encodeURIComponent(email)}`,
+    body => body.emoji
+  )
   
   return (
     <Fragment>
