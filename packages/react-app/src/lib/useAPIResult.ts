@@ -17,11 +17,12 @@ const useAPIResult = <B, T>(
   bodyParser: (body: B) => T,
   skipAuthentication = false
 ) => {
-  const axiosSource = axios.CancelToken.source()
   const [result, setResult] = useState<T>()
   const { getTokenSilently } = useAuth0()
 
   const initiateFetch = () => {
+    const axiosSource = axios.CancelToken.source()
+
     const fetchApiResult = async () => {
 
       const headers: Record<string, string> = {}
@@ -50,7 +51,7 @@ const useAPIResult = <B, T>(
     return cancelFetch
   }
 
-  useEffect(initiateFetch, [axiosSource])
+  useEffect(initiateFetch, [])
 
   return result
 }
