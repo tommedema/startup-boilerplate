@@ -24,7 +24,7 @@
   "dependencies": {
     "@org/string-to-emoji": "^1.0.0",
     "aws-sdk": "^2.580.0",
-    "jsonwebtoken": "^8.5.1",
+    "jsonwebtoken": "^9.0.0",
     "jwks-rsa": "^1.6.0",
     "uuid": "^3.3.3"
   }
